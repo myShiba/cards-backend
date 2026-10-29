@@ -10,11 +10,11 @@ http:
     type: json
     data: |-
       {
-        "firstName": "Test",
-        "lastName": "Student",
-        "login": "{{newLogin}}",
-        "password": "{{newPassword}}",
-        "email": "student@example.com"
+        "firstName": "John",
+        "lastName": "Doe",
+        "login": "johnuser3",
+        "password": "johnpassword",
+        "email": "johndoe@example.com"
       }
   auth: inherit
 
@@ -51,6 +51,6 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+  forwardAuthorizationHeader: true
 
-docs: |-
-  Creates a new account. Does not change the logged-in user for the requests that follow.
+docs: Creates a new account. Does not change the logged-in user for the requests that follow.
