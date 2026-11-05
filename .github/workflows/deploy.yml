@@ -11,13 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     # Repository secrets (Settings > Secrets and variables > Actions):
-    #   SSH_HOST         the droplet's IP address
-    #   SSH_USER         the user to log in as (deploy)
+    #   DROPLET_HOST         the droplet's IP address
+    #   DROPLET_USER         the user to log in as (deploy)
     #   SSH_PRIVATE_KEY  a private key whose public half is in that user's
     #                    ~/.ssh/authorized_keys on the droplet
     env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
-      SSH_USER: ${{ secrets.SSH_USER }}
+      DROPLET_HOST: ${{ secrets.DROPLET_HOST }}
+      DROPLET_USER: ${{ secrets.DROPLET_USER }}
       APP_DIR: /opt/cards-api
 
     steps:
@@ -41,30 +41,30 @@ jobs:
 
       # --- Continuous deployment: only for pushes, not pull requests -------
       - name: Explain a skipped deploy
-        if: github.event_name == 'push' && env.SSH_HOST == ''
-        run: echo "::warning::Deploy skipped. Add the SSH_HOST, SSH_USER, and SSH_PRIVATE_KEY repository secrets to deploy."
+        if: github.event_name == 'push' && env.DROPLET_HOST == ''
+        run: echo "::warning::Deploy skipped. Add the DROPLET_HOST, DROPLET_USER, and SSH_PRIVATE_KEY repository secrets to deploy."
 
       - name: Set up SSH
-        if: github.event_name == 'push' && env.SSH_HOST != ''
+        if: github.event_name == 'push' && env.DROPLET_HOST != ''
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H "$SSH_HOST" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "$DROPLET_HOST" >> ~/.ssh/known_hosts
 
       # Copy only what the API needs to run. --delete removes files you've
       # deleted from the repository; excluded paths are never touched, so the
       # server's own .env and node_modules stay put.
       - name: Copy the API code to the droplet
-        if: github.event_name == 'push' && env.SSH_HOST != ''
+        if: github.event_name == 'push' && env.DROPLET_HOST != ''
         run: >
           rsync -az --delete --no-owner --no-group
           --exclude '.git/' --exclude '.github/' --exclude 'node_modules/'
           --exclude '.env' --exclude 'tests/' --exclude 'api-tests/' --exclude 'tutorials/'
           -e "ssh -i ~/.ssh/deploy_key"
-          ./ "$SSH_USER@$SSH_HOST:$APP_DIR/"
+          ./ "$DROPLET_USER@$DROPLET_HOST:$APP_DIR/"
 
       # Install production dependencies only (no nodemon, Vitest, ...),
       # restart the service, and fail the deploy if the API doesn't answer.
@@ -75,9 +75,9 @@ jobs:
       # where to find deploy's service manager. (\$ means "expand this on
       # the droplet", not here on GitHub.)
       - name: Install and restart on the droplet
-        if: github.event_name == 'push' && env.SSH_HOST != ''
+        if: github.event_name == 'push' && env.DROPLET_HOST != ''
         run: |
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "
+          ssh -i ~/.ssh/deploy_key "$DROPLET_USER@$DROPLET_HOST" "
             set -e
             export XDG_RUNTIME_DIR=/run/user/\$(id -u)
             cd $APP_DIR
