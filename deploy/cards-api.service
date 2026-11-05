@@ -28,6 +28,7 @@ WorkingDirectory=/opt/cards-api
 # Node version in NODE_VERSION, and then runs the command.
 Environment=NODE_VERSION=26
 Environment=NODE_ENV=production
+Environment=MONGODB_URI=mongodb://127.0.0.1:27018/CardsDB
 ExecStart=%h/.nvm/nvm-exec node server.js
 
 # Start again automatically if it crashes

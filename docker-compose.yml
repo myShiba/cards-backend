@@ -30,7 +30,7 @@ services:
     # Without 127.0.0.1, Docker would publish the database to the whole
     # internet on a server, bypassing the firewall.
     ports:
-      - "127.0.0.1:27017:27017"
+      - "127.0.0.1:27018:27017"
     environment:
       - MONGO_INITDB_DATABASE=CardsDB
     volumes:
