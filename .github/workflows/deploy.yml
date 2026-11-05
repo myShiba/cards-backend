@@ -81,7 +81,6 @@ jobs:
             set -e
             export XDG_RUNTIME_DIR=/run/user/\$(id -u)
             cd /var/www/cards-backend
-            killall -9 mongod
             docker compose up -d --wait mongodb
             cd $APP_DIR
             NODE_VERSION=26 ~/.nvm/nvm-exec npm ci --omit=dev
