@@ -81,7 +81,7 @@ jobs:
             set -e
             export XDG_RUNTIME_DIR=/run/user/\$(id -u)
             cd $APP_DIR
-            docker compose up -d --wait mongodb
+            docker compose -p cards-backend up -d --wait mongodb
             NODE_VERSION=26 ~/.nvm/nvm-exec npm ci --omit=dev
             systemctl --user restart cards-api
             curl -fsS --retry 10 --retry-delay 2 --retry-connrefused http://localhost:5000/api/ping
