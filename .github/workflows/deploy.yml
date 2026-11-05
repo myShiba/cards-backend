@@ -83,6 +83,7 @@ jobs:
             cd $APP_DIR
             docker compose -p cards-backend up -d --wait mongodb
             NODE_VERSION=26 ~/.nvm/nvm-exec npm ci --omit=dev
+            systemctl --user daemon-reload
             systemctl --user restart cards-api
             curl -fsS --retry 10 --retry-delay 2 --retry-connrefused http://localhost:5000/api/ping
           "
