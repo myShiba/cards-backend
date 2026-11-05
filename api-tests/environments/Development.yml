@@ -1,7 +1,7 @@
 name: Development
 variables:
   - name: baseURL
-    value: https://mern.myshiba.org
+    value: localhost:5000
     description: ""
   - name: login
     value: johnaedo

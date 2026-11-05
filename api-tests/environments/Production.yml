@@ -1,7 +1,7 @@
 name: Production
 variables:
   - name: baseURL
-    value: http://mern.myshiba.org
+    value: https://mern.myshiba.org
     description: ""
   - name: login
     value: johnaedo
