@@ -2,7 +2,7 @@ const express = require('express');
 const users = require('../controllers/usersController');
 const cards = require('../controllers/cardsController');
 const validateObjectId = require('../middleware/validateObjectId');
-const { requireAuth, requireSelf } = require('../middleware/auth');
+const { requireAuth, requireSelf, requireShelter } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -16,13 +16,13 @@ router.post('/', users.createUser);
 // GET /api/users/:userId - Fetch one user
 router.get('/:userId', requireAuth, requireSelf, users.getUser);
 
-// Cards belong to a user (1:many), so the collection is nested under its owner
-// GET  /api/users/:userId/cards?search=  - List (and optionally search) a user's cards
-// POST /api/users/:userId/cards          - Create a card owned by this user
+// Dogs belong to a user (1:many), so the collection is nested under its owner
+// GET  /api/users/:userId/cards?search=  - List (and optionally search) a user's dogs
+// POST /api/users/:userId/cards          - Create a dog owned by this user
 router
   .route('/:userId/cards')
   .all(requireAuth, requireSelf)
   .get(cards.listCards)
-  .post(cards.createCard);
+  .post(requireShelter, cards.createCard);
 
 module.exports = router;

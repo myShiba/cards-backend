@@ -10,10 +10,15 @@ http:
     type: json
     data: |-
       {
-        "playerName": "{{cardName}}",
-        "teamName": "Test Squad",
-        "cardValue": 1234,
-        "publisher": "Bruno Collectibles"
+        "name": "{{dogName}}",
+        "breed": "Beagle",
+        "age": 2,
+        "gender": "male",
+        "size": "medium",
+        "location": "Orlando, FL",
+        "intakeDate": "2025-01-15",
+        "price": 123,
+        "description": "Friendly and playful."
       }
   auth:
     type: bearer
@@ -23,11 +28,11 @@ runtime:
   scripts:
     - type: before-request
       code: |-
-        // A user can't own two cards with the same name, so make each run unique
-        bru.setVar("cardName", `Test Card ${Date.now()}`);
+        // A user can't own two dogs with the same name, so make each run unique
+        bru.setVar("dogName", `Test Dog ${Date.now()}`);
     - type: after-response
       code: |-
-        // Save the new card's id for the get, update, and delete requests
+        // Save the new dog's id for the get, update, and delete requests
         if (res.getStatus() === 201) {
           bru.setVar("cardId", res.getBody()._id);
         }
@@ -44,10 +49,10 @@ runtime:
         });
 
         test("returns the card with the fields that were sent", function () {
-          expect(body.playerName).to.equal(bru.getVar("cardName"));
-          expect(body.teamName).to.equal("Test Squad");
-          expect(body.cardValue).to.equal(1234);
-          expect(body.publisher).to.equal("Bruno Collectibles");
+          expect(body.name).to.equal(bru.getVar("dogName"));
+          expect(body.breed).to.equal("Beagle");
+          expect(body.age).to.equal(2);
+          expect(body.price).to.equal(123);
         });
 
         test("the card belongs to the logged-in user", function () {

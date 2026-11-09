@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
+      enum: ['user', 'shelter'],
       default: 'user',
       trim: true
     }

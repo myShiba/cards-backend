@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "cardValue": 4321
+        "price": 432
       }
   auth:
     type: bearer
@@ -27,8 +27,8 @@ runtime:
         });
 
         test("changes only the fields sent", function () {
-          expect(body.cardValue).to.equal(4321);
-          expect(body.playerName).to.equal(bru.getVar("cardName"));
+          expect(body.price).to.equal(432);
+          expect(body.name).to.equal(bru.getVar("dogName"));
         });
 
 settings:

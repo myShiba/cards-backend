@@ -1,13 +1,13 @@
 openapi: 3.0.3
 info:
-  title: CardsDB REST API
+  title: Dog Listings API
   description: |
-    RESTful backend API for the MERN Cards demo application.
+    RESTful backend API for managing dog listings.
 
     **Authentication:** register (`POST /api/users`) or log in (`POST /api/auth/login`)
     to get a token, then click **Authorize** and paste it. Protected routes expect
     the header `Authorization: Bearer <token>`. Users can only read and change their
-    own account and cards.
+    own account and dog listings.
   version: 2.0.0
   contact:
     name: John Aedo
@@ -21,7 +21,7 @@ tags:
   - name: Health
   - name: Auth
   - name: Users
-  - name: Cards
+  - name: Dogs
 
 paths:
   /api/ping:
@@ -71,7 +71,7 @@ paths:
     post:
       tags: [Users]
       summary: Register a new user
-      description: Creates an account and logs the new user in. Any `role` in the body is ignored.
+      description: Creates an account and logs the new user in. `role` may be `user` (default) or `shelter`; only shelter accounts can add dogs.
       requestBody:
         required: true
         content:
@@ -124,27 +124,27 @@ paths:
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
-      tags: [Cards]
-      summary: List your cards
+      tags: [Dogs]
+      summary: List your dogs
       security:
         - bearerAuth: []
       parameters:
         - name: search
           in: query
           required: false
-          description: Case-insensitive match on player name, card name, team, or publisher, or an exact card value
+          description: Case-insensitive match on name, breed, gender, size, location, or description, or an exact age or price
           schema:
             type: string
             example: speedy
       responses:
         '200':
-          description: The user's cards
+          description: The user's dogs
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Card'
+                  $ref: '#/components/schemas/Dog'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -152,9 +152,9 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
     post:
-      tags: [Cards]
-      summary: Add a card
-      description: Send either `playerName` (a player card) or `card` (a simple named card). Card names must be unique per user.
+      tags: [Dogs]
+      summary: Add a dog
+      description: Dog names must be unique per user.
       security:
         - bearerAuth: []
       requestBody:
@@ -162,20 +162,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CardInput'
+              $ref: '#/components/schemas/DogInput'
       responses:
         '201':
-          description: Card created
+          description: Dog created
           headers:
             Location:
-              description: URL of the new card
+              description: URL of the new dog
               schema:
                 type: string
                 example: /api/cards/6accf63063fba309139648cb
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Card'
+                $ref: '#/components/schemas/Dog'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -190,22 +190,22 @@ paths:
       - name: id
         in: path
         required: true
-        description: The card's id
+        description: The dog's id
         schema:
           type: string
           example: 6accf63063fba309139648cb
     get:
-      tags: [Cards]
-      summary: Get one of your cards
+      tags: [Dogs]
+      summary: Get one of your dogs
       security:
         - bearerAuth: []
       responses:
         '200':
-          description: The card
+          description: The dog
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Card'
+                $ref: '#/components/schemas/Dog'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -215,9 +215,9 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
-      tags: [Cards]
-      summary: Update one of your cards
-      description: Changes only the fields sent. A card's owner can't be changed.
+      tags: [Dogs]
+      summary: Update one of your dogs
+      description: Changes only the fields sent. A dog's owner can't be changed.
       security:
         - bearerAuth: []
       requestBody:
@@ -225,14 +225,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CardInput'
+              $ref: '#/components/schemas/DogInput'
       responses:
         '200':
-          description: The updated card
+          description: The updated dog
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Card'
+                $ref: '#/components/schemas/Dog'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -242,8 +242,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     delete:
-      tags: [Cards]
-      summary: Delete one of your cards
+      tags: [Dogs]
+      summary: Delete one of your dogs
       security:
         - bearerAuth: []
       responses:
@@ -308,6 +308,11 @@ components:
         email:
           type: string
           example: moxie@example.com
+        role:
+          type: string
+          enum: [user, shelter]
+          default: user
+          description: Select shelter to register a shelter account; only shelters can add dogs.
 
     User:
       type: object
@@ -325,6 +330,7 @@ components:
           type: string
         role:
           type: string
+          enum: [user, shelter]
           example: user
 
     AuthResponse:
@@ -336,28 +342,46 @@ components:
         user:
           $ref: '#/components/schemas/User'
 
-    CardInput:
+    DogInput:
       type: object
+      required: [name]
       properties:
-        playerName:
+        name:
           type: string
-          example: Bugs Bunny
-        teamName:
+          example: Bella
+        breed:
           type: string
-          example: Tune Squad
-        cardValue:
+          example: Labrador Retriever
+        age:
           type: number
-          example: 15000
-        publisher:
+          minimum: 0
+          example: 3
+        gender:
           type: string
-          example: Warner Collectibles
-        card:
+          enum: [male, female, unknown]
+        size:
           type: string
-          description: Name of a simple card, used instead of playerName
+          enum: [small, medium, large, extra-large, unknown]
+        location:
+          type: string
+          example: Orlando, FL
+        intakeDate:
+          type: string
+          format: date-time
+        price:
+          type: number
+          minimum: 0
+          example: 250
+        description:
+          type: string
+          example: Friendly and energetic.
+        status:
+          type: string
+          enum: [available, pending, adopted]
 
-    Card:
+    Dog:
       allOf:
-        - $ref: '#/components/schemas/CardInput'
+        - $ref: '#/components/schemas/DogInput'
         - type: object
           properties:
             _id:
@@ -365,7 +389,7 @@ components:
               example: 6accf63063fba309139648cb
             userId:
               type: string
-              description: Id of the user who owns the card
+              description: Id of the user who owns the dog
               example: 6accf6233d21392120c442db
 
     Error:

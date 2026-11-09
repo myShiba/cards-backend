@@ -1,11 +1,10 @@
-const { Card } = require('../models');
+const { Dog } = require('../models');
 
 // --- Helpers --------------------------------------------------------------
 
 const escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// Builds the Mongo filter for a user's cards, optionally narrowed by a search term
-const buildCardQuery = ({ search, userId }) => {
+const buildDogQuery = ({ search, userId }) => {
   const query = { userId };
 
   if (search) {
@@ -13,43 +12,54 @@ const buildCardQuery = ({ search, userId }) => {
     const searchNum = Number(search);
 
     query.$or = [
-      { playerName: pattern },
-      { card: pattern },
-      { teamName: pattern },
-      { publisher: pattern },
-      ...(Number.isNaN(searchNum) ? [] : [{ cardValue: searchNum }])
+      { name: pattern },
+      { breed: pattern },
+      { gender: pattern },
+      { size: pattern },
+      { location: pattern },
+      { description: pattern },
+      ...(Number.isNaN(searchNum) ? [] : [{ age: searchNum }, { price: searchNum }])
     ];
   }
 
   return query;
 };
 
-// Copies only the allowed fields from the request body, so a client
-// can't reassign a card's userId (or set any other field) through it.
-const pickCardFields = (body = {}) => {
+const pickDogFields = (body = {}) => {
   const fields = {};
-  if (body.playerName !== undefined) fields.playerName = String(body.playerName).trim();
-  if (body.teamName !== undefined) fields.teamName = String(body.teamName).trim();
-  if (body.publisher !== undefined) fields.publisher = String(body.publisher).trim();
-  if (body.card !== undefined) fields.card = String(body.card).trim();
-  if (body.cardValue !== undefined) fields.cardValue = Number(body.cardValue);
+  for (const field of ['name', 'breed', 'gender', 'size', 'location', 'description', 'status']) {
+    if (body[field] !== undefined) fields[field] = String(body[field]).trim();
+  }
+  if (body.age !== undefined) fields.age = Number(body.age);
+  if (body.price !== undefined) fields.price = Number(body.price);
+  if (body.intakeDate !== undefined) fields.intakeDate = new Date(body.intakeDate);
   return fields;
 };
 
-// Loads a card by id and checks that the logged-in user owns it.
-// Sends the 404/403 response itself and returns null if either check fails.
-const loadOwnedCard = async (req, res) => {
-  const card = await Card.findById(req.params.id);
+const validateDogFields = (fields, res) => {
+  if (['age', 'price'].some((field) => Number.isNaN(fields[field]))) {
+    res.status(400).json({ error: 'age and price must be numbers' });
+    return false;
+  }
+  if (fields.intakeDate && Number.isNaN(fields.intakeDate.getTime())) {
+    res.status(400).json({ error: 'intakeDate must be a valid date' });
+    return false;
+  }
+  return true;
+};
 
-  if (!card) {
-    res.status(404).json({ error: 'Card not found' });
+const loadOwnedDog = async (req, res) => {
+  const dog = await Dog.findById(req.params.id);
+
+  if (!dog) {
+    res.status(404).json({ error: 'Dog not found' });
     return null;
   }
-  if (card.userId !== req.userId) {
-    res.status(403).json({ error: 'You can only access your own cards' });
+  if (dog.userId !== req.userId) {
+    res.status(403).json({ error: 'You can only access your own dogs' });
     return null;
   }
-  return card;
+  return dog;
 };
 
 // --- Handlers -------------------------------------------------------------
@@ -58,8 +68,8 @@ const loadOwnedCard = async (req, res) => {
 exports.listCards = async (req, res, next) => {
   try {
     const search = (req.query.search ?? '').toString().trim();
-    const cards = await Card.find(buildCardQuery({ search, userId: req.params.userId })).lean();
-    res.status(200).json(cards);
+    const dogs = await Dog.find(buildDogQuery({ search, userId: req.params.userId })).lean();
+    res.status(200).json(dogs);
   } catch (err) {
     next(err);
   }
@@ -69,43 +79,23 @@ exports.listCards = async (req, res, next) => {
 exports.createCard = async (req, res, next) => {
   try {
     const { userId } = req.params;
-    const fields = pickCardFields(req.body);
+    const fields = pickDogFields(req.body);
 
-    if (Number.isNaN(fields.cardValue)) {
-      return res.status(400).json({ error: 'cardValue must be a number' });
+    if (!fields.name) {
+      return res.status(400).json({ error: 'name is required' });
     }
+    if (!validateDogFields(fields, res)) return;
 
-    // Two card shapes exist: player cards and simple named cards
-    const isPlayerCard = 'playerName' in fields || 'teamName' in fields;
-    const name = isPlayerCard ? fields.playerName : fields.card;
-
-    if (!name) {
-      return res.status(400).json({ error: 'playerName or card is required' });
-    }
-
-    // A user can't own two cards with the same name (case-insensitive)
-    const exactName = { $regex: `^${escapeRegex(name)}$`, $options: 'i' };
-    const duplicate = await Card.exists({
-      userId,
-      $or: [{ playerName: exactName }, { card: exactName }]
-    });
+    const exactName = { $regex: `^${escapeRegex(fields.name)}$`, $options: 'i' };
+    const duplicate = await Dog.exists({ userId, name: exactName });
 
     if (duplicate) {
-      return res.status(409).json({ error: 'You already have a card with that name' });
+      return res.status(409).json({ error: 'You already have a dog with that name' });
     }
 
-    const newCard = isPlayerCard
-      ? {
-          playerName: fields.playerName,
-          teamName: fields.teamName ?? '',
-          cardValue: fields.cardValue ?? 0,
-          publisher: fields.publisher ?? ''
-        }
-      : { card: fields.card };
+    const dog = await Dog.create({ ...fields, userId });
 
-    const card = await Card.create({ ...newCard, userId });
-
-    res.status(201).location(`/api/cards/${card._id}`).json(card);
+    res.status(201).location(`/api/cards/${dog._id}`).json(dog);
   } catch (err) {
     next(err);
   }
@@ -114,10 +104,10 @@ exports.createCard = async (req, res, next) => {
 // GET /api/cards/:id
 exports.getCard = async (req, res, next) => {
   try {
-    const card = await loadOwnedCard(req, res);
-    if (!card) return;
+    const dog = await loadOwnedDog(req, res);
+    if (!dog) return;
 
-    res.status(200).json(card);
+    res.status(200).json(dog);
   } catch (err) {
     next(err);
   }
@@ -126,22 +116,20 @@ exports.getCard = async (req, res, next) => {
 // PATCH /api/cards/:id
 exports.updateCard = async (req, res, next) => {
   try {
-    const fields = pickCardFields(req.body);
+    const fields = pickDogFields(req.body);
 
     if (Object.keys(fields).length === 0) {
       return res.status(400).json({ error: 'No updatable fields provided' });
     }
-    if (Number.isNaN(fields.cardValue)) {
-      return res.status(400).json({ error: 'cardValue must be a number' });
-    }
+    if (!validateDogFields(fields, res)) return;
 
-    const card = await loadOwnedCard(req, res);
-    if (!card) return;
+    const dog = await loadOwnedDog(req, res);
+    if (!dog) return;
 
-    card.set(fields);
-    await card.save();
+    dog.set(fields);
+    await dog.save();
 
-    res.status(200).json(card);
+    res.status(200).json(dog);
   } catch (err) {
     next(err);
   }
@@ -150,10 +138,10 @@ exports.updateCard = async (req, res, next) => {
 // DELETE /api/cards/:id
 exports.deleteCard = async (req, res, next) => {
   try {
-    const card = await loadOwnedCard(req, res);
-    if (!card) return;
+    const dog = await loadOwnedDog(req, res);
+    if (!dog) return;
 
-    await card.deleteOne();
+    await dog.deleteOne();
     res.status(204).end();
   } catch (err) {
     next(err);

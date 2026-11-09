@@ -1,30 +1,15 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
-const { User, Card } = require('./models');
+const { User, Dog } = require('./models');
 
 const url = process.env.MONGODB_URI || 'mongodb://localhost:27017/CardsDB';
 
-const looneyTunesCards = [
-  { playerName: "Bugs Bunny", teamName: "Tune Squad", cardValue: 15000, publisher: "Warner Collectibles" },
-  { playerName: "Daffy Duck", teamName: "Duck Dodgers", cardValue: 12500, publisher: "Warner Collectibles" },
-  { playerName: "Porky Pig", teamName: "ACME All-Stars", cardValue: 8500, publisher: "Fleer" },
-  { playerName: "Yosemite Sam", teamName: "Wild West Legends", cardValue: 9200, publisher: "Donruss" },
-  { playerName: "Elmer Fudd", teamName: "Hunter Special", cardValue: 7800, publisher: "Topps" },
-  { playerName: "Tweety Bird", teamName: "Sky High", cardValue: 11000, publisher: "Upper Deck" },
-  { playerName: "Sylvester the Cat", teamName: "Alley Cats", cardValue: 6900, publisher: "Fleer" },
-  { playerName: "Tasmanian Devil", teamName: "Tazmanian Whirlwind", cardValue: 18500, publisher: "Panini" },
-  { playerName: "Road Runner", teamName: "ACME Speedsters", cardValue: 22000, publisher: "Upper Deck" },
-  { playerName: "Wile E. Coyote", teamName: "Genius Innovator", cardValue: 14000, publisher: "Donruss" },
-  { playerName: "Foghorn Leghorn", teamName: "Barnyard Heavyweights", cardValue: 9500, publisher: "Topps" },
-  { playerName: "Speedy Gonzales", teamName: "Fastest Mouse", cardValue: 16000, publisher: "Upper Deck" },
-  { playerName: "Marvin the Martian", teamName: "Illudium Q-36", cardValue: 27500, publisher: "Panini" },
-  { playerName: "Pepe Le Pew", teamName: "French Romantics", cardValue: 5400, publisher: "Fleer" },
-  { playerName: "Lola Bunny", teamName: "Tune Squad Captain", cardValue: 21000, publisher: "Topps" },
-  { playerName: "Granny", teamName: "Bird Protectors", cardValue: 4200, publisher: "Donruss" },
-  { playerName: "Michigan J. Frog", teamName: "Broadway Legends", cardValue: 35000, publisher: "Upper Deck" },
-  { playerName: "Gossamer", teamName: "Red Monster Squad", cardValue: 13500, publisher: "Fleer" },
-  { playerName: "Taz", teamName: "Wild Spinners", cardValue: 17000, publisher: "Topps" },
-  { playerName: "Barnyard Dawg", teamName: "Guard Dogs", cardValue: 6100, publisher: "Donruss" }
+const dogs = [
+  { name: 'Bella', breed: 'Labrador Retriever', age: 3, gender: 'female', size: 'large', location: 'Orlando, FL', price: 250, description: 'Friendly and energetic.' },
+  { name: 'Max', breed: 'Beagle', age: 2, gender: 'male', size: 'medium', location: 'Tampa, FL', price: 200, description: 'Loves walks and company.' },
+  { name: 'Luna', breed: 'German Shepherd', age: 4, gender: 'female', size: 'large', location: 'Miami, FL', price: 300, description: 'Smart and well trained.' },
+  { name: 'Charlie', breed: 'Mixed Breed', age: 1, gender: 'male', size: 'small', location: 'Orlando, FL', price: 150, description: 'A playful young pup.' },
+  { name: 'Daisy', breed: 'Golden Retriever', age: 5, gender: 'female', size: 'large', location: 'Jacksonville, FL', price: 275, description: 'Gentle and great with families.' }
 ];
 
 async function seedDB() {
@@ -49,22 +34,22 @@ async function seedDB() {
     const userIdStr = user._id.toString();
     let seededCount = 0;
 
-    for (const card of looneyTunesCards) {
-      const existing = await Card.findOne({
+    for (const dog of dogs) {
+      const existing = await Dog.findOne({
         userId: userIdStr,
-        playerName: card.playerName
+        name: dog.name
       });
 
       if (!existing) {
-        await Card.create({
-          ...card,
+        await Dog.create({
+          ...dog,
           userId: userIdStr
         });
         seededCount++;
       }
     }
 
-    console.log(`Seeded ${seededCount} Looney Tunes cards for user johnaedo.`);
+    console.log(`Seeded ${seededCount} dogs for user johnaedo.`);
     console.log('Database seeding complete.');
   } catch (err) {
     console.error('Error seeding database:', err);

@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/auth');
+const { User } = require('../models');
 
 // Creates the token sent back after a successful login or registration.
 // The token's "sub" (subject) claim holds the user's id.
@@ -34,4 +35,22 @@ exports.requireSelf = (req, res, next) => {
     return res.status(403).json({ error: 'You can only access your own account' });
   }
   next();
+};
+
+// Shelter-only operations check the current database role rather than a role
+// copied into the token, so account changes take effect immediately.
+exports.requireShelter = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.userId).select('role').lean();
+
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid user session' });
+    }
+    if (user.role !== 'shelter') {
+      return res.status(403).json({ error: 'Only shelters can add dogs' });
+    }
+    next();
+  } catch (err) {
+    next(err);
+  }
 };

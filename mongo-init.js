@@ -4,8 +4,8 @@ if (!db.getCollectionNames().includes('users')) {
   db.createCollection('users');
 }
 
-if (!db.getCollectionNames().includes('cards')) {
-  db.createCollection('cards');
+if (!db.getCollectionNames().includes('dogs')) {
+  db.createCollection('dogs');
 }
 
 let user = db.users.findOne({ login: "johnaedo" });
@@ -27,31 +27,16 @@ if (!user) {
 
 const userIdStr = user._id.toString();
 
-const looneyTunesCards = [
-  { playerName: "Bugs Bunny", teamName: "Tune Squad", cardValue: 15000, publisher: "Warner Collectibles", userId: userIdStr },
-  { playerName: "Daffy Duck", teamName: "Duck Dodgers", cardValue: 12500, publisher: "Warner Collectibles", userId: userIdStr },
-  { playerName: "Porky Pig", teamName: "ACME All-Stars", cardValue: 8500, publisher: "Fleer", userId: userIdStr },
-  { playerName: "Yosemite Sam", teamName: "Wild West Legends", cardValue: 9200, publisher: "Donruss", userId: userIdStr },
-  { playerName: "Elmer Fudd", teamName: "Hunter Special", cardValue: 7800, publisher: "Topps", userId: userIdStr },
-  { playerName: "Tweety Bird", teamName: "Sky High", cardValue: 11000, publisher: "Upper Deck", userId: userIdStr },
-  { playerName: "Sylvester the Cat", teamName: "Alley Cats", cardValue: 6900, publisher: "Fleer", userId: userIdStr },
-  { playerName: "Tasmanian Devil", teamName: "Tazmanian Whirlwind", cardValue: 18500, publisher: "Panini", userId: userIdStr },
-  { playerName: "Road Runner", teamName: "ACME Speedsters", cardValue: 22000, publisher: "Upper Deck", userId: userIdStr },
-  { playerName: "Wile E. Coyote", teamName: "Genius Innovator", cardValue: 14000, publisher: "Donruss", userId: userIdStr },
-  { playerName: "Foghorn Leghorn", teamName: "Barnyard Heavyweights", cardValue: 9500, publisher: "Topps", userId: userIdStr },
-  { playerName: "Speedy Gonzales", teamName: "Fastest Mouse", cardValue: 16000, publisher: "Upper Deck", userId: userIdStr },
-  { playerName: "Marvin the Martian", teamName: "Illudium Q-36", cardValue: 27500, publisher: "Panini", userId: userIdStr },
-  { playerName: "Pepe Le Pew", teamName: "French Romantics", cardValue: 5400, publisher: "Fleer", userId: userIdStr },
-  { playerName: "Lola Bunny", teamName: "Tune Squad Captain", cardValue: 21000, publisher: "Topps", userId: userIdStr },
-  { playerName: "Granny", teamName: "Bird Protectors", cardValue: 4200, publisher: "Donruss", userId: userIdStr },
-  { playerName: "Michigan J. Frog", teamName: "Broadway Legends", cardValue: 35000, publisher: "Upper Deck", userId: userIdStr },
-  { playerName: "Gossamer", teamName: "Red Monster Squad", cardValue: 13500, publisher: "Fleer", userId: userIdStr },
-  { playerName: "Taz", teamName: "Wild Spinners", cardValue: 17000, publisher: "Topps", userId: userIdStr },
-  { playerName: "Barnyard Dawg", teamName: "Guard Dogs", cardValue: 6100, publisher: "Donruss", userId: userIdStr }
+const dogs = [
+  { name: "Bella", breed: "Labrador Retriever", age: 3, gender: "female", size: "large", location: "Orlando, FL", price: 250, description: "Friendly and energetic.", userId: userIdStr, intakeDate: new Date() },
+  { name: "Max", breed: "Beagle", age: 2, gender: "male", size: "medium", location: "Tampa, FL", price: 200, description: "Loves walks and company.", userId: userIdStr, intakeDate: new Date() },
+  { name: "Luna", breed: "German Shepherd", age: 4, gender: "female", size: "large", location: "Miami, FL", price: 300, description: "Smart and well trained.", userId: userIdStr, intakeDate: new Date() },
+  { name: "Charlie", breed: "Mixed Breed", age: 1, gender: "male", size: "small", location: "Orlando, FL", price: 150, description: "A playful young pup.", userId: userIdStr, intakeDate: new Date() },
+  { name: "Daisy", breed: "Golden Retriever", age: 5, gender: "female", size: "large", location: "Jacksonville, FL", price: 275, description: "Gentle and great with families.", userId: userIdStr, intakeDate: new Date() }
 ];
 
-looneyTunesCards.forEach(card => {
-  if (!db.cards.findOne({ userId: userIdStr, playerName: card.playerName })) {
-    db.cards.insertOne(card);
+dogs.forEach(dog => {
+  if (!db.dogs.findOne({ userId: userIdStr, name: dog.name })) {
+    db.dogs.insertOne(dog);
   }
 });

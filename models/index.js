@@ -1,7 +1,7 @@
 const User = require('./User');
-const Card = require('./Card');
+const Dog = require('./Dog');
 
 module.exports = {
   User,
-  Card
+  Dog
 };
